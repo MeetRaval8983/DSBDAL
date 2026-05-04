@@ -1,0 +1,368 @@
+Practical 1
+import pandas as pd
+import numpy as np
+from sklearn import preprocessing
+
+# Load dataset
+df = pd.read_csv("IRIS.csv")
+
+# Basic info
+print(df.shape)
+print(df.info())
+print(df.describe())
+
+# Check missing values
+print(df.isnull().sum())
+
+# Data types
+print(df.dtypes)
+df
+
+# Normalization (Min-Max Scaling)
+scaler = preprocessing.MinMaxScaler()
+col_name = ["SepalLengthCm","SepalWidthCm","PetalLengthCm","PetalWidthCm"]
+df[col_name] = scaler.fit_transform(df[col_name])
+
+# Convert categorical to numerical
+label = preprocessing.LabelEncoder()
+df['species'] = label.fit_transform(df['species'])
+df
+print(df.head())
+-------------------------------------------------------------------------------------------------------------------------
+Practical 2
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Load dataset
+df = pd.read_csv("academic_performance.csv")
+
+# 1. Handle inconsistencies
+cols = ['Maths','Science','English','Attendance']
+
+for col in cols:
+    df.loc[(df[col] < 0) | (df[col] > 100), col] = np.nan
+
+# Check missing values
+print(df.isnull().sum())
+
+# Replace missing with mean
+for col in cols:
+    df[col] = df[col].fillna(df[col].mean())
+
+# 2. Detect outliers (IQR method)
+Q1 = df[cols].quantile(0.25)
+Q3 = df[cols].quantile(0.75)
+IQR = Q3 - Q1
+
+lower = Q1 - 1.5 * IQR
+upper = Q3 + 1.5 * IQR
+
+# Treat outliers (capping)
+for col in cols:
+    df.loc[df[col] < lower[col], col] = lower[col]
+    df.loc[df[col] > upper[col], col] = upper[col]
+
+# Visualization (optional but good)
+sns.boxplot(data=df[cols])
+plt.show()
+
+# 3. Transformation (reduce skewness)
+df['Maths_transformed'] = np.sqrt(df['Maths'])
+plt.hist(df['Maths_transformed'],bins=5)
+plt.show()
+---------------------------------------------------------------------------------------------------
+Practical 3
+import pandas as pd
+import numpy as np
+
+# Load Titanic dataset
+df = pd.read_csv("titanic.csv")
+
+# Handle missing values (Age)
+df["Age"] = df["Age"].fillna(df["Age"].mean())
+
+# Group by categorical variable (Sex)
+grouped = df.groupby('Sex')['Age']
+
+# Summary statistics
+print(grouped.describe())
+
+# Mean & Median
+print(grouped.agg(['mean','median']))
+
+# Convert grouped data into list
+print(grouped.apply(list))
+
+
+# IRIS DATASET PART
+df2 = pd.read_csv("iris.csv")
+
+# Group by species
+grouped_iris = df2.groupby('species')
+
+# Summary
+print(grouped_iris.describe())
+
+# Individual stats per species
+for spec, data in grouped_iris:
+    print("Species:", spec)
+    print(data.describe())
+-----------------------------------------------------------------------------------------------------------------
+Practical 4
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+import matplotlib.pyplot as plt
+
+# Load dataset
+df = pd.read_csv("BostonHousing.csv")
+
+# Handle missing values
+df["rm"] = df["rm"].fillna(df["rm"].mean())
+
+# Split data
+X = df.drop("medv", axis=1)   # independent
+y = df["medv"]                # dependent
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+# Model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Prediction
+y_pred = model.predict(X_test)
+
+# Evaluation
+print("MSE:", mean_squared_error(y_test, y_pred))
+print("R2 Score:", r2_score(y_test, y_pred))
+
+# Plot
+plt.scatter(y_test, y_pred)
+plt.xlabel("Actual")
+plt.ylabel("Predicted")
+plt.show()
+----------------------------------------------------------------------------------------------------------------------
+Practical 5
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
+
+# Load dataset
+df = pd.read_csv("Social_Network_Ads.csv")
+
+# Encode categorical data
+le = LabelEncoder()
+df['Gender'] = le.fit_transform(df['Gender'])
+
+# Independent & dependent variables
+X = df[['Age','EstimatedSalary']]
+y = df['Purchased']
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+# Model
+model = LogisticRegression(max_iter=200)
+model.fit(X_train, y_train)
+
+# Prediction
+y_pred = model.predict(X_test)
+
+# Confusion Matrix
+cm = confusion_matrix(y_test, y_pred)
+print(cm)
+
+# Metrics
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Precision:", precision_score(y_test, y_pred))
+print("Recall:", recall_score(y_test, y_pred))
+print("F1 Score:", f1_score(y_test, y_pred))
+
+----------------------------------------------------------------------------------------------------------
+Practical 6
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
+
+# Load dataset
+df = pd.read_csv("IRIS.csv")
+
+# Encode target variable
+le = LabelEncoder()
+df['Species'] = le.fit_transform(df['Species'])
+
+# Split data
+X = df.drop("Species", axis=1)
+y = df["Species"]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+# Model
+model = GaussianNB()
+model.fit(X_train, y_train)
+
+# Prediction
+y_pred = model.predict(X_test)
+
+# Confusion matrix
+cm = confusion_matrix(y_test, y_pred)
+print(cm)
+
+# Metrics
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Precision:", precision_score(y_test, y_pred, average='micro'))
+print("Recall:", recall_score(y_test, y_pred, average='micro'))
+print("F1 Score:", f1_score(y_test, y_pred, average='micro'))
+----------------------------------------------------------------------------------------------------------------
+Practical 7
+import nltk
+import re
+from nltk.tokenize import word_tokenize, sent_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+from nltk import pos_tag
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Sample text
+text = "Tokenization is the first step in text analytics."
+
+# Tokenization
+print(sent_tokenize(text))
+print(word_tokenize(text))
+
+# Stopword removal
+stop_words = set(stopwords.words("english"))
+tokens = word_tokenize(text.lower())
+filtered = [w for w in tokens if w not in stop_words]
+print(filtered)
+
+# Stemming
+ps = PorterStemmer()
+words = ["studies","studying","cries","cry"]
+for w in words:
+    print(ps.stem(w))
+
+# Lemmatization
+lemmatizer = WordNetLemmatizer()
+for w in words:
+    print(lemmatizer.lemmatize(w))
+
+# POS Tagging
+sentence = "The pink sweater fit her perfectly"
+tokens = word_tokenize(sentence)
+print(pos_tag(tokens))
+
+# TF-IDF
+docs = ["Jupiter is the largest planet",
+        "Mars is the fourth planet from the sun"]
+
+vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(docs)
+
+print(vectorizer.get_feature_names_out())
+print(X.toarray())
+---------------------------------------------------------------------------------------------
+Practical 8
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Load dataset
+df = pd.read_csv("Titanic-Dataset.csv")
+
+# 1. Gender distribution
+sns.countplot(x="Sex", data=df)
+plt.title("Genderwise Distribution")
+plt.show()
+
+# 2. Survival based on gender
+sns.countplot(x="Sex", hue="Survived", data=df)
+plt.title("Genderwise Survival")
+plt.show()
+
+# 3. Survival based on class
+sns.countplot(x="Sex", hue="Pclass", data=df)
+plt.title("Classwise Survival")
+plt.show()
+
+# 4. Fare distribution (Histogram)
+sns.histplot(df["Fare"], bins=30, kde=True)
+plt.title("Fare Distribution")
+plt.show()
+--------------------------------------------------------------------------------------------------------------------------
+Practical 9
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Load dataset
+df = pd.read_csv("Titanic-Dataset.csv")
+
+# Boxplot
+sns.boxplot(x='Sex', y='Age', hue='Survived', data=df)
+plt.title("Age Distribution by Gender and Survival")
+plt.show()
+--------------------------------------------------------------------------------------------------------------------------
+Practical 10
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Load dataset
+df = pd.read_csv("Iris.csv")
+
+# Check structure
+print(df.info())
+
+# 1. Histograms
+df.hist(figsize=(10,8))
+plt.show()
+
+# 2. Boxplots
+sns.boxplot(data=df)
+plt.show()
+
+# 3. Correlation heatmap
+sns.heatmap(df.select_dtypes(include='number').corr(), annot=True, cmap="YlGnBu")
+plt.show()
+
+# 4. Pairplot
+sns.pairplot(df, hue="Species")
+plt.show()
+--------------------------------------------------------------------------------------------------------------------------
+Practical 11
+cd ~
+mkdir ~/hadoop-test
+cd  ~/hadoop-test
+mkdir input
+echo "hadoop mapreduce test" > input/file1.txt
+echo "learning hadoop is fun" > input/file2.txt
+hadoop jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-*.jar wordcount input output
+cat output/part-r-00000
+--------------------------------------------------------------------------------------------------------------------------
+Practical 12
+import scala.io.StdIn
+
+object Addition {
+  def main(args: Array[String]): Unit = {
+
+    println("Enter first number:")
+    val a = StdIn.readInt()
+
+    println("Enter second number:")
+    val b = StdIn.readInt()
+
+    val sum = a + b
+
+    println("Sum = " + sum)
+  }
+}
